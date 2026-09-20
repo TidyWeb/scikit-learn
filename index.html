@@ -163,6 +163,15 @@
     .recall h3 { margin: 0 0 .45rem; }
     .recall p { max-width: 43rem; margin-bottom: 0; color: var(--quiet); }
     .recall b { align-self: end; font: 500 4rem/.75 var(--mono); letter-spacing: -.2em; }
+    .resource-list { border-top: 1px solid var(--ink); }
+    .resource { display: grid; grid-template-columns: minmax(12rem, .72fr) minmax(0, 1.45fr) 8.5rem; gap: 1.25rem; align-items: start; padding: 1.2rem 0; border-bottom: 1px solid var(--ink); }
+    .resource-source { margin: 0 0 .35rem; color: var(--quiet); font: .61rem var(--mono); letter-spacing: .07em; text-transform: uppercase; }
+    .resource h3 { margin: 0; font-size: clamp(1.22rem, 2.15vw, 1.75rem); }
+    .resource h3 a { text-decoration-thickness: 1px; text-underline-offset: .18em; }
+    .resource h3 a:hover, .resource h3 a:focus { color: var(--signal-ink); background: var(--signal); outline: 2px solid var(--ink); }
+    .resource p { margin: 0; color: var(--quiet); font-size: .88rem; line-height: 1.45; }
+    .resource-level { justify-self: end; padding: .42rem .55rem; border: 1px solid var(--ink); font: .6rem/1.25 var(--mono); letter-spacing: .04em; text-align: center; text-transform: uppercase; }
+    .resource-level.dense { color: #f6f6f2; background: var(--ink); }
     footer.page-footer { max-width: 91rem; margin: auto; padding: 2rem clamp(1.25rem, 5vw, 5rem) 4rem; color: var(--quiet); font-size: .72rem; }
 
     @media (prefers-reduced-motion: no-preference) {
@@ -201,6 +210,8 @@
       .task { grid-template-columns: 2.8rem 1fr; gap: .7rem; }
       .task p { grid-column: 2; }
       .task-output { grid-column: 2; justify-self: start; }
+      .resource { grid-template-columns: 1fr auto; gap: .7rem; }
+      .resource p { grid-column: 1 / -1; }
       .split-board, .metric-strip { grid-template-columns: 1fr; }
       .sample-zone + .sample-zone, .metric-strip p + p { border-top: 1px solid var(--ink); border-left: 0; }
       .pipeline { grid-template-columns: 1fr; gap: 2rem; }
@@ -239,6 +250,7 @@
         <li><a href="#evaluation"><span>05</span> Check the result</a></li>
         <li><a href="#pipeline"><span>06</span> Use a pipeline</a></li>
         <li><a href="#code"><span>07</span> Read the code</a></li>
+        <li><a href="#further-reading"><span>08</span> Further reading</a></li>
       </ol></nav>
       <p class="rail-note">A visual introduction before the detailed scikit-learn lessons.</p>
       <a class="tidy" href="https://github.com/TidyWeb/" target="_blank" rel="noopener"><img src="assets/tidyweb_logo.png" alt="TidyWeb logo"><span>© TidyWeb<br>Learning library</span></a>
@@ -367,6 +379,41 @@ print(prediction)  <span class="comment"># [8.]</span></code></pre>
               <aside class="code-notes"><p class="eyebrow">Read down the code</p><ol><li><strong>Import</strong> one specific estimator from scikit-learn.</li><li><strong>Set up</strong> three known input-and-answer pairs.</li><li><strong>Construct</strong> an unfitted estimator.</li><li><strong>Fit</strong> the learned relationship to the known pairs.</li><li><strong>Predict</strong> a score for four study hours.</li></ol></aside>
             </div>
             <div class="recall"><div><h3>When you meet a new scikit-learn class, ask:</h3><p>Does it prepare data, learn from data, make a prediction, or measure a result? Then ask what input it expects and what it returns.</p></div><b>X→y</b></div>
+          </div>
+        </section>
+
+        <section class="section" id="further-reading">
+          <div class="section-index"><b>08</b><span>Further reading</span></div>
+          <div class="section-main">
+            <p class="eyebrow">Supplementary material</p><h2>Keep the useful links.</h2>
+            <p class="intro">This guide gives you the working picture. These are good next places to go when you want more context, more code, or a deeper reference. They are not all meant to be read in one sitting.</p>
+            <div class="resource-list">
+              <article class="resource">
+                <div><p class="resource-source">Official scikit-learn</p><h3><a href="https://scikit-learn.org/stable/getting_started.html" target="_blank" rel="noopener">Getting started ↗</a></h3></div>
+                <p><strong>Best first stop.</strong> A concise official overview of the library’s main jobs and the shared way its tools work. Use it when you want the next practical step after this page.</p>
+                <span class="resource-level">Overview<br>light</span>
+              </article>
+              <article class="resource">
+                <div><p class="resource-source">IBM Think</p><h3><a href="https://www.ibm.com/think/topics/scikit-learn" target="_blank" rel="noopener">What is Scikit-Learn? ↗</a></h3></div>
+                <p><strong>Best for context.</strong> Explains where scikit-learn fits in machine learning, its main task families, and the wider Python tools around it. Useful before getting lost in individual classes.</p>
+                <span class="resource-level">Overview<br>medium</span>
+              </article>
+              <article class="resource">
+                <div><p class="resource-source">Daniel Bourke / Zero to Mastery</p><h3><a href="https://dev.mrdbourke.com/zero-to-mastery-ml/introduction-to-scikit-learn/" target="_blank" rel="noopener">Introduction to Scikit-Learn ↗</a></h3></div>
+                <p><strong>Best for a guided build.</strong> A long, practical notebook-style walkthrough: prepare data, split it, choose an estimator, fit, score, improve, and build pipelines. Dip into the section that matches your current lesson.</p>
+                <span class="resource-level dense">Hands-on<br>dense</span>
+              </article>
+              <article class="resource">
+                <div><p class="resource-source">DigitalOcean</p><h3><a href="https://www.digitalocean.com/community/tutorials/python-scikit-learn-tutorial" target="_blank" rel="noopener">Beginner’s guide to machine learning in Python ↗</a></h3></div>
+                <p><strong>Best for a second explanation.</strong> A broad beginner article covering installation, first use, common task types, and the wider place of scikit-learn. Good if a plainer prose explanation helps.</p>
+                <span class="resource-level">Beginner<br>medium</span>
+              </article>
+              <article class="resource">
+                <div><p class="resource-source">Official scikit-learn</p><h3><a href="https://scikit-learn.org/stable/user_guide.html" target="_blank" rel="noopener">User guide ↗</a></h3></div>
+                <p><strong>Best as a reference, not a starting course.</strong> The complete official map of estimators, preprocessing, model selection, metrics, and more. Go here when you know the question you need answered.</p>
+                <span class="resource-level dense">Reference<br>dense</span>
+              </article>
+            </div>
           </div>
         </section>
       </div>
