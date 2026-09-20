@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A visual, plain-English scikit-learn introduction: data, models, evaluation and pipelines.">
+  <title>Scikit-learn — The Working Picture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Sans:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #111111;
+      --paper: #f6f6f2;
+      --white: #ffffff;
+      --soft: #e9e9e3;
+      --line: #c7c7bf;
+      --quiet: #64645e;
+      --signal: #d9ff38;
+      --signal-ink: #324000;
+      --mono: 'DM Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+      --sans: 'Instrument Sans', 'Avenir Next', 'Helvetica Neue', sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font: 17px/1.55 var(--sans); }
+    a { color: inherit; }
+    code { font: .88em var(--mono); }
+    .skip { position: fixed; z-index: 20; top: -4rem; left: 1rem; padding: .5rem .75rem; color: var(--ink); background: var(--signal); }
+    .skip:focus { top: 0; }
+
+    .shell { display: grid; grid-template-columns: 14.25rem minmax(0, 1fr); min-height: 100vh; }
+    .rail { position: sticky; top: 0; display: flex; flex-direction: column; height: 100vh; padding: 1.25rem 1rem 1rem; color: #f4f4ee; background: var(--ink); }
+    .rail-top { display: flex; gap: .7rem; align-items: center; padding-bottom: 1.15rem; border-bottom: 1px solid #4a4a45; text-decoration: none; }
+    .mark { display: grid; width: 2.35rem; height: 2.35rem; place-items: center; color: var(--ink); background: var(--signal); font: 700 .72rem/1 var(--mono); letter-spacing: -.08em; }
+    .rail-kicker, .rail-title { margin: 0; }
+    .rail-kicker { color: var(--signal); font: 500 .61rem/1.25 var(--mono); letter-spacing: .09em; text-transform: uppercase; }
+    .rail-title { margin-top: .22rem; font-size: .88rem; font-weight: 600; line-height: 1.15; }
+    .rail nav { margin-top: 1.5rem; }
+    .rail ol { margin: 0; padding: 0; list-style: none; }
+    .rail li + li { margin-top: .12rem; }
+    .rail li a { display: grid; grid-template-columns: 1.6rem 1fr; gap: .42rem; padding: .5rem .3rem; color: #d3d3cc; text-decoration: none; font-size: .79rem; line-height: 1.25; border-left: 2px solid transparent; }
+    .rail li a:hover, .rail li a:focus { color: #fff; background: #242421; border-left-color: var(--signal); outline: none; }
+    .rail li span { color: var(--signal); font: .61rem/1.55 var(--mono); }
+    .rail-note { margin: 1.2rem .3rem; color: #9d9d95; font-size: .72rem; line-height: 1.45; }
+    .tidy { display: flex; gap: .52rem; align-items: center; margin-top: auto; padding: .9rem .25rem 0; color: #a8a8a0; border-top: 1px solid #4a4a45; font-size: .65rem; line-height: 1.25; text-decoration: none; }
+    .tidy img { width: 1.7rem; height: 1.7rem; object-fit: contain; filter: grayscale(1) contrast(1.1); }
+
+    main { min-width: 0; overflow: hidden; background-image: linear-gradient(#0000 95%, rgb(17 17 17 / .045) 95%), linear-gradient(90deg, #0000 95%, rgb(17 17 17 / .045) 95%); background-size: 100% 2rem, 2rem 100%; }
+    .topline { display: flex; justify-content: space-between; gap: 1rem; padding: .72rem clamp(1.25rem, 5vw, 5rem); color: #e7e7e2; background: var(--ink); font: .65rem var(--mono); letter-spacing: .07em; text-transform: uppercase; }
+    .topline span:last-child { color: var(--signal); }
+    .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(23rem, .78fr); gap: clamp(1.5rem, 4vw, 5rem); align-items: end; max-width: 91rem; margin: auto; padding: clamp(3rem, 7vw, 8rem) clamp(1.25rem, 5vw, 5rem) 4rem; }
+    .eyebrow { margin: 0 0 .85rem; color: var(--quiet); font: .67rem var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 50rem; margin-bottom: 1.4rem; font-size: clamp(3.2rem, 8.2vw, 7.8rem); font-weight: 600; letter-spacing: -.075em; line-height: .86; }
+    h1 .outline { color: transparent; -webkit-text-stroke: 1.6px var(--ink); }
+    .lede { max-width: 38rem; margin-bottom: 0; font-size: clamp(1.06rem, 1.6vw, 1.28rem); line-height: 1.48; }
+    .model-card { position: relative; display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: .45rem; align-items: center; min-height: 13rem; padding: 1rem; color: #f6f6f2; background: var(--ink); outline: 1px solid var(--ink); outline-offset: 7px; }
+    .model-card::before { position: absolute; top: .55rem; left: .7rem; content: 'THE CENTRAL IDEA'; color: var(--signal); font: .6rem var(--mono); letter-spacing: .09em; }
+    .model-card b { display: block; padding: 1.35rem .35rem .5rem; text-align: center; font: 600 clamp(.82rem, 1.4vw, 1.05rem)/1.05 var(--sans); }
+    .model-card b small { display: block; margin-top: .38rem; color: #aaa; font: .62rem var(--mono); }
+    .model-card i { color: var(--signal); font: 1.8rem/1 var(--mono); font-style: normal; }
+    .model-card .model { color: var(--ink); background: var(--signal); }
+    .model-card footer { position: absolute; right: .8rem; bottom: .65rem; left: .8rem; margin: 0; padding-top: .6rem; color: #adada6; border-top: 1px solid #44443f; font: .63rem/1.35 var(--mono); }
+
+    .content { max-width: 91rem; margin: auto; padding: 0 clamp(1.25rem, 5vw, 5rem) 5rem; }
+    section { scroll-margin-top: 1rem; }
+    .section { display: grid; grid-template-columns: 8rem minmax(0, 1fr); gap: clamp(1rem, 4vw, 4.6rem); padding: 5rem 0; border-top: 1px solid var(--ink); }
+    .section-index { padding-top: .45rem; }
+    .section-index b { display: block; font: 500 2rem/.82 var(--mono); letter-spacing: -.12em; }
+    .section-index span { display: block; margin-top: .9rem; color: var(--quiet); font: .6rem/1.3 var(--mono); letter-spacing: .07em; text-transform: uppercase; }
+    .section-main { min-width: 0; }
+    h2 { max-width: 55rem; margin-bottom: 1rem; font-size: clamp(2.15rem, 4.5vw, 4.7rem); font-weight: 600; letter-spacing: -.06em; line-height: .94; }
+    h3 { font-size: 1.32rem; line-height: 1; letter-spacing: -.035em; }
+    .intro { max-width: 47rem; margin-bottom: 2.1rem; color: #363632; font-size: 1.08rem; }
+    .bridge-note { max-width: 55rem; margin-top: 1rem; padding: .85rem 0 .15rem 1rem; border-left: 3px solid var(--ink); font-size: .92rem; }
+    .bridge-note strong { background: var(--signal); }
+
+    .data-stage { display: grid; grid-template-columns: minmax(0, 1fr) 13.5rem; border: 1px solid var(--ink); background: var(--white); }
+    .table-wrap { overflow-x: auto; }
+    .data-stage table { width: 100%; min-width: 37rem; border-collapse: collapse; }
+    .data-stage th, .data-stage td { padding: .78rem .9rem; text-align: left; border-bottom: 1px solid var(--line); }
+    .data-stage th { background: #efefeb; font: .63rem var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+    .data-stage th:last-child { color: var(--ink); background: var(--signal); }
+    .data-stage tbody tr:last-child td { border-bottom: 0; }
+    .data-stage aside { display: flex; flex-direction: column; justify-content: space-between; padding: 1rem; color: #f6f6f2; background: var(--ink); }
+    .data-stage aside p { color: #a8a8a0; font: .64rem/1.35 var(--mono); }
+    .target-symbol { color: var(--signal); font: 600 5rem/.8 var(--sans); letter-spacing: -.12em; }
+    .data-key { display: grid; grid-template-columns: 3fr 1fr; margin-top: .7rem; border: 1px solid var(--ink); font-size: .84rem; }
+    .data-key span { padding: .65rem .8rem; }
+    .data-key span:first-child { border-right: 1px solid var(--ink); }
+    .data-key b { font-family: var(--mono); }
+
+    .workflow { position: relative; display: grid; grid-template-columns: repeat(6, minmax(7rem, 1fr)); gap: 0; margin-top: 2rem; border: 1px solid var(--ink); background: var(--white); }
+    .workflow::before { position: absolute; top: 2.56rem; right: 1.25rem; left: 1.25rem; height: 1px; background: var(--ink); content: ''; }
+    .step { position: relative; min-height: 14rem; padding: 1rem; border-right: 1px solid var(--ink); }
+    .step:last-child { border-right: 0; }
+    .step-num { position: relative; z-index: 1; display: grid; width: 3.2rem; height: 3.2rem; place-items: center; color: var(--ink); background: var(--white); border: 1px solid var(--ink); font: .72rem var(--mono); }
+    .step h3 { margin-top: 3rem; }
+    .step p { margin-bottom: 0; color: var(--quiet); font-size: .82rem; line-height: 1.36; }
+    .step.fit { color: #f6f6f2; background: var(--ink); }
+    .step.fit .step-num { color: var(--ink); background: var(--signal); border-color: var(--signal); }
+    .step.fit p { color: #c4c4bd; }
+    .step.use .step-num { background: var(--signal); }
+    .workflow-legend { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-top: .75rem; color: var(--quiet); font: .63rem var(--mono); }
+    .workflow-legend span::before { display: inline-block; width: .55rem; height: .55rem; margin-right: .35rem; background: var(--ink); content: ''; }
+    .workflow-legend span:last-child::before { background: var(--signal); border: 1px solid var(--ink); }
+
+    .task-list { border-top: 1px solid var(--ink); }
+    .task { display: grid; grid-template-columns: 5.2rem minmax(9rem, .72fr) minmax(0, 1.4fr) 9rem; gap: 1rem; align-items: center; padding: 1.1rem 0; border-bottom: 1px solid var(--ink); }
+    .task-number { font: .7rem var(--mono); }
+    .task h3 { margin: 0; font-size: clamp(1.35rem, 2.4vw, 2rem); }
+    .task p { margin: 0; color: var(--quiet); font-size: .9rem; }
+    .task-output { justify-self: end; padding: .4rem .55rem; background: var(--signal); font: .62rem var(--mono); text-transform: uppercase; }
+    .task:last-child .task-output { color: #fff; background: var(--ink); }
+
+    .terms { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--ink); border-left: 1px solid var(--ink); }
+    .term { min-height: 13rem; padding: 1rem; background: var(--white); border-right: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+    .term-label { color: var(--quiet); font: .6rem var(--mono); letter-spacing: .07em; text-transform: uppercase; }
+    .term h3 { margin-top: 2rem; }
+    .term p { margin-bottom: 0; color: var(--quiet); font-size: .84rem; line-height: 1.38; }
+    .terms-arrow { display: grid; min-height: 13rem; place-items: center; color: var(--ink); background: var(--signal); border-right: 1px solid var(--ink); border-bottom: 1px solid var(--ink); font: 2rem var(--mono); }
+    .terms-arrow small { display: block; margin-top: .3rem; font: .55rem var(--mono); letter-spacing: .07em; text-transform: uppercase; }
+
+    .split-board { display: grid; grid-template-columns: 2fr 1fr; border: 1px solid var(--ink); background: var(--white); }
+    .sample-zone { padding: 1rem; }
+    .sample-zone + .sample-zone { color: #f6f6f2; background: var(--ink); border-left: 1px solid var(--ink); }
+    .sample-zone .eyebrow { margin-bottom: 1.3rem; }
+    .sample-zone + .sample-zone .eyebrow { color: var(--signal); }
+    .sample-zone h3 { margin-bottom: 1rem; }
+    .sample-dots { display: grid; grid-template-columns: repeat(8, 1fr); gap: .45rem; margin-bottom: 1rem; }
+    .sample-dots i { display: block; aspect-ratio: 1; background: var(--ink); }
+    .sample-zone + .sample-zone .sample-dots { grid-template-columns: repeat(3, 1fr); }
+    .sample-zone + .sample-zone .sample-dots i { background: var(--signal); }
+    .sample-zone p:last-child { margin-bottom: 0; color: var(--quiet); font-size: .85rem; }
+    .sample-zone + .sample-zone p:last-child { color: #bebeb7; }
+    .metric-strip { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--ink); border-top: 0; }
+    .metric-strip p { margin: 0; padding: .9rem 1rem; font-size: .85rem; }
+    .metric-strip p + p { border-left: 1px solid var(--ink); }
+    .metric-strip strong { font-family: var(--mono); }
+
+    .pipeline { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.8rem; padding: 2.7rem 1rem 1rem; color: #f6f6f2; background: var(--ink); }
+    .pipeline::before { position: absolute; top: 1.55rem; right: 14%; left: 14%; height: 1px; background: #7d7d76; content: ''; }
+    .pipeline::after { position: absolute; top: .55rem; left: 1rem; padding: .15rem .35rem; color: var(--ink); background: var(--signal); content: 'ONE PIPELINE'; font: .59rem var(--mono); letter-spacing: .09em; }
+    .pipe-stage { position: relative; }
+    .pipe-stage::before { position: absolute; top: -1.65rem; width: .8rem; height: .8rem; background: var(--signal); content: ''; }
+    .pipe-stage:not(:last-child)::after { position: absolute; top: -1.8rem; right: -1.75rem; color: var(--signal); content: '→'; font: 1.4rem var(--mono); }
+    .pipe-stage b { display: block; font-size: 1.3rem; }
+    .pipe-stage p { margin: .45rem 0 0; color: #bababa; font-size: .84rem; line-height: 1.38; }
+    .pipeline-note { margin: 0; padding: .8rem 1rem; color: var(--ink); background: var(--signal); font-size: .84rem; }
+
+    .code-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(15rem, .78fr); border: 1px solid var(--ink); }
+    pre { margin: 0; padding: 1.3rem; overflow: auto; color: #f0f0ec; background: var(--ink); font: .8rem/1.67 var(--mono); }
+    .comment { color: #9c9c94; }
+    .focus { color: var(--signal); }
+    .code-notes { padding: 1.2rem; background: var(--white); }
+    .code-notes ol { margin: 1rem 0 0; padding: 0; list-style: none; counter-reset: note; }
+    .code-notes li { position: relative; padding: 0 0 1rem 2rem; color: #454540; font-size: .86rem; counter-increment: note; }
+    .code-notes li::before { position: absolute; left: 0; display: grid; width: 1.35rem; height: 1.35rem; place-items: center; background: var(--signal); content: counter(note); color: var(--ink); font: .62rem var(--mono); }
+    .code-notes li:last-child { padding-bottom: 0; }
+    .recall { display: grid; grid-template-columns: 1fr auto; gap: 2rem; margin-top: 1.25rem; padding: 1.1rem 0 0; border-top: 1px solid var(--ink); }
+    .recall h3 { margin: 0 0 .45rem; }
+    .recall p { max-width: 43rem; margin-bottom: 0; color: var(--quiet); }
+    .recall b { align-self: end; font: 500 4rem/.75 var(--mono); letter-spacing: -.2em; }
+    footer.page-footer { max-width: 91rem; margin: auto; padding: 2rem clamp(1.25rem, 5vw, 5rem) 4rem; color: var(--quiet); font-size: .72rem; }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .hero > *, .section { animation: settle .55s both; }
+      .hero .model-card { animation-delay: .13s; }
+      .section:nth-child(2) { animation-delay: .05s; }
+      @keyframes settle { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    }
+    @media (max-width: 1280px) {
+      .workflow { grid-template-columns: repeat(3, 1fr); }
+      .workflow::before { display: none; }
+      .step { border-bottom: 1px solid var(--ink); }
+      .step:nth-child(3) { border-right: 0; }
+      .step:nth-child(n + 4) { border-bottom: 0; }
+      .terms { grid-template-columns: repeat(2, 1fr); }
+      .terms-arrow { min-height: 9rem; }
+    }
+    @media (max-width: 760px) {
+      .shell { display: block; }
+      .rail { position: relative; display: grid; grid-template-columns: 1fr auto; height: auto; padding: .85rem 1rem; }
+      .rail nav, .rail-note { display: none; }
+      .rail-top { padding: 0; border: 0; }
+      .tidy { margin: 0; padding: 0; border: 0; }
+      .tidy span { display: none; }
+      .hero { grid-template-columns: 1fr; padding-block: 3.5rem; }
+      .section { grid-template-columns: 1fr; gap: 1rem; padding-block: 3.5rem; }
+      .section-index { display: flex; gap: .75rem; align-items: baseline; padding: 0; }
+      .section-index span { margin: 0; }
+      .workflow { grid-template-columns: repeat(2, 1fr); }
+      .step:nth-child(3) { border-right: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+      .step:nth-child(2), .step:nth-child(4), .step:nth-child(6) { border-right: 0; }
+      .step:nth-child(4) { border-bottom: 1px solid var(--ink); }
+      .data-stage, .code-grid { grid-template-columns: 1fr; }
+      .data-stage aside { min-height: 8rem; }
+      .code-notes { border-top: 1px solid var(--ink); }
+      .task { grid-template-columns: 2.8rem 1fr; gap: .7rem; }
+      .task p { grid-column: 2; }
+      .task-output { grid-column: 2; justify-self: start; }
+      .split-board, .metric-strip { grid-template-columns: 1fr; }
+      .sample-zone + .sample-zone, .metric-strip p + p { border-top: 1px solid var(--ink); border-left: 0; }
+      .pipeline { grid-template-columns: 1fr; gap: 2rem; }
+      .pipeline::before { top: 1.55rem; bottom: 1.5rem; left: 1.45rem; width: 1px; height: auto; }
+      .pipe-stage { padding-left: 1.65rem; }
+      .pipe-stage::before { top: .25rem; left: .05rem; }
+      .pipe-stage:not(:last-child)::after { display: none; }
+    }
+    @media (max-width: 440px) {
+      .topline span:first-child { display: none; }
+      h1 { font-size: 3.6rem; }
+      .model-card { min-height: 11rem; }
+      .workflow, .terms { grid-template-columns: 1fr; }
+      .step, .step:nth-child(n) { min-height: 0; border-right: 0; border-bottom: 1px solid var(--ink); }
+      .step:last-child { border-bottom: 0; }
+      .step h3 { margin-top: 1.7rem; }
+      .terms-arrow { min-height: 5rem; }
+      .data-key { grid-template-columns: 1fr; }
+      .data-key span:first-child { border-right: 0; border-bottom: 1px solid var(--ink); }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to the guide</a>
+  <div class="shell">
+    <aside class="rail" aria-label="Guide sections">
+      <a class="rail-top" href="#main" aria-label="Back to the start of this guide">
+        <span class="mark" aria-hidden="true">X→y</span>
+        <span><span class="rail-kicker">ML / 01</span><span class="rail-title">Scikit-learn<br>The working picture</span></span>
+      </a>
+      <nav aria-label="On this page"><ol>
+        <li><a href="#data"><span>01</span> Start with data</a></li>
+        <li><a href="#workflow"><span>02</span> See the workflow</a></li>
+        <li><a href="#tasks"><span>03</span> Choose the task</a></li>
+        <li><a href="#terms"><span>04</span> Name the parts</a></li>
+        <li><a href="#evaluation"><span>05</span> Check the result</a></li>
+        <li><a href="#pipeline"><span>06</span> Use a pipeline</a></li>
+        <li><a href="#code"><span>07</span> Read the code</a></li>
+      </ol></nav>
+      <p class="rail-note">A visual introduction before the detailed scikit-learn lessons.</p>
+      <a class="tidy" href="https://github.com/TidyWeb/" target="_blank" rel="noopener"><img src="assets/tidyweb_logo.png" alt="TidyWeb logo"><span>© TidyWeb<br>Learning library</span></a>
+    </aside>
+
+    <main id="main">
+      <div class="topline"><span>Advanced Data Analysis Techniques</span><span>Concept guide / before code</span></div>
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Scikit-learn / a first working picture</p>
+          <h1>Make the<br><span class="outline">pattern</span><br>visible.</h1>
+          <p class="lede">Scikit-learn is a Python library for machine learning. This page shows how a table of known examples can become a prediction for a new one.</p>
+        </div>
+        <div class="model-card" aria-label="Inputs X go into a fitted model and produce a predicted answer y hat">
+          <b>inputs<small>X</small></b><i>→</i><b class="model">fitted<br>model<small>learned pattern</small></b><i>→</i><b>prediction<small>ŷ</small></b>
+          <footer>Known answers <code>y</code> are used while fitting. A prediction <code>ŷ</code> is the model’s estimated answer for new inputs.</footer>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="section" id="data">
+          <div class="section-index"><b>01</b><span>Start with data</span></div>
+          <div class="section-main">
+            <p class="eyebrow">One stable example</p><h2>One table. Two jobs.</h2>
+            <p class="intro">Imagine past house sales. Each row is one sale. The first three columns are facts available before the sale. The final column is an answer we already know.</p>
+            <div class="data-stage">
+              <div class="table-wrap"><table><thead><tr><th>bedrooms</th><th>area m²</th><th>house age</th><th>sale price</th></tr></thead><tbody><tr><td>2</td><td>68</td><td>72</td><td>£179,000</td></tr><tr><td>3</td><td>92</td><td>15</td><td>£345,000</td></tr><tr><td>4</td><td>110</td><td>34</td><td>£392,000</td></tr></tbody></table></div>
+              <aside><p>KNOWN ANSWER<br>FOR EACH OLD SALE</p><div class="target-symbol">y</div><p>target / label</p></aside>
+            </div>
+            <div class="data-key"><span><b>X = inputs</b> — bedrooms, area and house age. These are called features.</span><span><b>y = answer</b> — sale price.</span></div>
+            <p class="bridge-note"><strong>Plain-English rule:</strong> row, example, instance and observation usually mean one item of data. A feature is an input. A target or label is the answer.</p>
+          </div>
+        </section>
+
+        <section class="section" id="workflow">
+          <div class="section-index"><b>02</b><span>See the workflow</span></div>
+          <div class="section-main">
+            <p class="eyebrow">The order of work</p><h2>Keep the whole process in view.</h2>
+            <p class="intro">The detailed lessons will unpack each stage. For now, see the full shape first. You revisit the middle stages while improving a model, but this is the basic order.</p>
+            <div class="workflow" aria-label="Six stages in a machine-learning workflow">
+              <article class="step"><span class="step-num">01</span><h3>Define</h3><p>Ask whether you need a number, a category, or groups.</p></article>
+              <article class="step"><span class="step-num">02</span><h3>Prepare</h3><p>Build a dataset. Decide what a row means and which columns are inputs.</p></article>
+              <article class="step"><span class="step-num">03</span><h3>Split</h3><p>Keep some examples aside before fitting, so you can check fairly later.</p></article>
+              <article class="step fit"><span class="step-num">04</span><h3>Fit</h3><p>Give the model known input-and-answer pairs. This is where it learns.</p></article>
+              <article class="step"><span class="step-num">05</span><h3>Evaluate</h3><p>Compare predictions with answers the model did not see while fitting.</p></article>
+              <article class="step use"><span class="step-num">06</span><h3>Use</h3><p>Give the fitted model new inputs. It estimates an answer.</p></article>
+            </div>
+            <div class="workflow-legend"><span>work with known data</span><span>use or check unseen data</span></div>
+          </div>
+        </section>
+
+        <section class="section" id="tasks">
+          <div class="section-index"><b>03</b><span>Choose the task</span></div>
+          <div class="section-main">
+            <p class="eyebrow">Choose the answer first</p><h2>The output narrows the model.</h2>
+            <p class="intro">Do not start by searching through hundreds of scikit-learn classes. First ask what kind of answer the problem requires.</p>
+            <div class="task-list">
+              <article class="task"><span class="task-number">01</span><h3>Regression</h3><p>Estimate a quantity, such as price, temperature, demand or travel time.</p><span class="task-output">number</span></article>
+              <article class="task"><span class="task-number">02</span><h3>Classification</h3><p>Choose a known category, such as spam/not spam or one letter class.</p><span class="task-output">class</span></article>
+              <article class="task"><span class="task-number">03</span><h3>Clustering</h3><p>Find groups of similar examples when no correct group label has been supplied.</p><span class="task-output">group ID</span></article>
+            </div>
+            <p class="bridge-note"><strong>Labelled</strong> data has a known target, so it can teach a supervised model. <strong>Unlabelled</strong> data has inputs but no supplied answer. It is still useful: clustering looks for structure without a target.</p>
+          </div>
+        </section>
+
+        <section class="section" id="terms">
+          <div class="section-index"><b>04</b><span>Name the parts</span></div>
+          <div class="section-main">
+            <p class="eyebrow">Do not mix these up</p><h2>Four names. One chain of events.</h2>
+            <p class="intro">These words describe different things. Separating them gives every scikit-learn command a place.</p>
+            <div class="terms">
+              <article class="term"><span class="term-label">General method</span><h3>Algorithm</h3><p>A general method for finding a useful pattern in data.</p></article>
+              <article class="term"><span class="term-label">Python object</span><h3>Estimator</h3><p>The scikit-learn object, such as <code>LinearRegression()</code>, before it has seen your data.</p></article>
+              <div class="terms-arrow" aria-hidden="true">→<small>fit on training data</small></div>
+              <article class="term"><span class="term-label">Data-specific result</span><h3>Fitted model</h3><p>The estimator after <code>.fit(X, y)</code>. It can now make predictions.</p></article>
+            </div>
+            <p class="bridge-note"><strong>Keep this sentence:</strong> an algorithm is the general method; an estimator is the scikit-learn object; a fitted model is that object after it has learned from your training data; a prediction is its output for new inputs.</p>
+          </div>
+        </section>
+
+        <section class="section" id="evaluation">
+          <div class="section-index"><b>05</b><span>Check the result</span></div>
+          <div class="section-main">
+            <p class="eyebrow">Do not mark your own homework</p><h2>Hold some data back.</h2>
+            <p class="intro">A model can memorise training rows and look impressive without learning a useful pattern. Keep examples aside before fitting, then use them to check how the model handles unseen data.</p>
+            <div class="split-board">
+              <article class="sample-zone"><p class="eyebrow">Used while fitting</p><h3>Training data</h3><div class="sample-dots" aria-label="Eight training examples"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><p>Known input-and-answer pairs go into <code>fit(X_train, y_train)</code>.</p></article>
+              <article class="sample-zone"><p class="eyebrow">Held back until later</p><h3>Test data</h3><div class="sample-dots" aria-label="Three test examples"><i></i><i></i><i></i></div><p>Use these to estimate likely performance on new data.</p></article>
+            </div>
+            <div class="metric-strip"><p><strong>Metrics:</strong> choose a measure that reflects the cost of mistakes. Regression often uses MAE or RMSE; classification may use precision, recall or F1.</p><p><strong>Leakage:</strong> if held-back answers influence preparation or tuning too early, the final score is no longer a fair test.</p></div>
+          </div>
+        </section>
+
+        <section class="section" id="pipeline">
+          <div class="section-index"><b>06</b><span>Use a pipeline</span></div>
+          <div class="section-main">
+            <p class="eyebrow">Not a final step</p><h2>Keep preparation and modelling together.</h2>
+            <p class="intro">Real data often needs preparation before a model can use it. A scikit-learn pipeline records the preparation and the model as one repeatable object.</p>
+            <div class="pipeline">
+              <article class="pipe-stage"><b>Prepare</b><p>Fill missing values, scale numbers, or encode categories.</p></article>
+              <article class="pipe-stage"><b>Fit the model</b><p>Learn from prepared training data and known targets.</p></article>
+              <article class="pipe-stage"><b>Predict</b><p>Apply the same preparation to new input before predicting.</p></article>
+            </div>
+            <p class="pipeline-note"><strong>Why it matters:</strong> a pipeline stops you preparing training data one way and new data another way. It contains this part of the workflow; after testing, the whole pipeline can be saved.</p>
+          </div>
+        </section>
+
+        <section class="section" id="code">
+          <div class="section-index"><b>07</b><span>Read the code</span></div>
+          <div class="section-main">
+            <p class="eyebrow">The code follows the picture</p><h2>One small, complete example.</h2>
+            <p class="intro">This example has one input feature, study hours, and one known answer, exam score. The code follows the same construct → fit → predict pattern you have already seen.</p>
+            <div class="code-grid">
+              <pre><code><span class="comment"># inputs X: study hours</span>
+<span class="comment"># known answers y: exam scores</span>
+from sklearn.linear_model import <span class="focus">LinearRegression</span>
+
+X = [[1], [2], [3]]
+y = [2, 4, 6]
+
+model = LinearRegression()
+model.fit(X, y)
+prediction = model.predict([[4]])
+
+print(prediction)  <span class="comment"># [8.]</span></code></pre>
+              <aside class="code-notes"><p class="eyebrow">Read down the code</p><ol><li><strong>Import</strong> one specific estimator from scikit-learn.</li><li><strong>Set up</strong> three known input-and-answer pairs.</li><li><strong>Construct</strong> an unfitted estimator.</li><li><strong>Fit</strong> the learned relationship to the known pairs.</li><li><strong>Predict</strong> a score for four study hours.</li></ol></aside>
+            </div>
+            <div class="recall"><div><h3>When you meet a new scikit-learn class, ask:</h3><p>Does it prepare data, learn from data, make a prediction, or measure a result? Then ask what input it expects and what it returns.</p></div><b>X→y</b></div>
+          </div>
+        </section>
+      </div>
+      <footer class="page-footer"><p>Working visual candidate · Learner-facing companion material for Advanced Data Analysis Techniques. Independently written for local study; not official Code Institute or scikit-learn material.</p></footer>
+    </main>
+  </div>
+</body>
+</html>
